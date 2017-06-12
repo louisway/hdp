@@ -13,6 +13,9 @@ doc_state::doc_state()
     m_doc_length = 0;  // document length
     m_num_tables = 0;  // number of tables in this document
     m_words = NULL;
+    words_status_old = NULL;
+    words_status_new = NULL;
+    int year = -1;
 
     m_table_to_topic.clear(); // for a doc, translate its table index to topic index
     m_word_counts_by_t.clear(); // word counts for each table
@@ -56,7 +59,11 @@ void doc_state::free_doc_state()
     m_word_stats_by_t.clear();
 
     delete [] m_words;
+    delete [] words_status_old;
+    delete [] words_status_new;
     m_words = NULL;
+    wrods_status_old = NULL;
+    words_status_new = NULL;
 }
 
 hdp_state::hdp_state()
