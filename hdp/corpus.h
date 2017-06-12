@@ -13,6 +13,7 @@ public:
     int length;
     int total;
     int id;
+    int year;
 public:
     document()
     {
@@ -54,6 +55,7 @@ public:
     int total_words;
     int num_docs;
     vector<document*> docs;
+    unordered_map<int,vector<int>> calender;
 };
 
 #endif	/* _CORPUS_H */

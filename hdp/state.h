@@ -53,6 +53,12 @@ public:
     //int m_topic_assignment; // this is extra information
 };
 
+struct word_topic
+{
+public:
+    int m_word_index;
+    int m_topic_assignment;
+};
 class doc_state
 {
 public:
@@ -60,6 +66,11 @@ public:
     int m_doc_length;  // document length
     int m_num_tables;  // number of tables in this document
     word_info * m_words;
+
+    word_topic * words_status_old; // new added old status
+    word_topic * words_status_new; // new added new status
+  
+    int year;// new added with the year
 
     int_vec m_table_to_topic; // for a doc, translate its table index to topic index
     int_vec m_word_counts_by_t; // word counts for each table
