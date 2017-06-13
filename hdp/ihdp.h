@@ -30,6 +30,7 @@ public:
                      hdp_hyperparameter * _hdp_param);
     void load(char * model_path);
     
+    void init_first_year();
     // new add 3 sampler 
     void predict_sampler();
     void hdp_sampler();

@@ -65,6 +65,22 @@ void ihdp::setup_state(const corpus * c,
     m_state->m_alpha = m_hdp_param->m_alpha_a * m_hdp_param->m_alpha_b;
 }
 
+void ihdp::run()
+{
+    //init for the first year
+    m_state->HDP_Sampler(time_stack[0] , false);
+    for( int inter = 0; iter < m_hdp_param->m_max_iter; iter++)
+    {
+        m_state->HDP_Sampler(time_stack[0], true);
+        //SPLIT AND MERGE WAITED TO BE UPDATED 
+    }
+    
+    // start to ihdp
+   
+    for (int point = 1; point <= time_interval; ++point )
+    {
+    }
+}
 void ihdp::run(const char * directory)
 {
     if (m_state->m_num_topics == 0)

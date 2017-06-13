@@ -344,6 +344,28 @@ void hdp_state::init_gibbs_state_with_fixed_num_topics()
 
 }
 
+void hdp_state::HDP_Sampler(const int first_year, bool remove)
+{
+    double_vec q;
+    double_vec f;
+    doc_state* d_state = NULL;
+    for(int j = 0; j < calendar[first_year].size(); ++j)
+    {
+        d_state = m_doc_states[j];
+        for (int i = 0; i < d_state->m_doc_length; i++)
+       {
+         sample_word_assignment(d_state, i ,remove, q,f);
+       }
+       sample_tables(d_state, q,f);
+    }
+    compact_hdp_state();
+     if (hdp_hyperparam->m_sample_hyperparameter)
+    {
+        sample_first_level_concentration(hdp_hyperparam);
+        sample_second_level_concentration(hdp_hyperparam);
+    }
+}
+
 void hdp_state::iterate_gibbs_state(bool remove, bool permute,
                                     hdp_hyperparameter * hdp_hyperparam,
                                     bool table_sampling)
