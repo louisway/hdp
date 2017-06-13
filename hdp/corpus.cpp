@@ -27,7 +27,7 @@ corpus::~corpus()
     num_docs = 0;
     total_words = 0;
     calender.clear();
-    year_stack.clear();
+    time_stack.clear();
 }
 
 void corpus::read_data(const char * filename)
