@@ -96,6 +96,7 @@ public:
 
 /// document states
     doc_state** m_doc_states;
+    unordered_map<int, vector<int> > calendar; // new add
 
 /// number of topics
     int m_num_topics;

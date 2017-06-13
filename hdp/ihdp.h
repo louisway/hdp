@@ -11,6 +11,7 @@ public:
 /// fixed parameters
     hdp_hyperparameter * m_hdp_param;
     int time_interval; // new add with time_interval
+    vector<int> time_stack; //new add with time stack
 
 /// sampling state
     hdp_state * m_state;

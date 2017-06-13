@@ -78,6 +78,7 @@ hdp_state::hdp_state()
     m_word_counts_by_z.clear();
     m_word_counts_by_zd.clear();
     m_word_counts_by_zw.clear();
+    calendar.clear();
 }
 
 hdp_state::~hdp_state()
@@ -98,6 +99,8 @@ void hdp_state::setup_state_from_corpus(const corpus * c)
         doc_state * d_state = new doc_state();
         m_doc_states[d]     = d_state;
         d_state->setup_state_from_doc(doc);
+        int this_year = doc->year;
+        calender[this_year].push_back(d);
     }
 }
 
@@ -163,6 +166,7 @@ void hdp_state::free_state()
 
     m_num_tables_by_z.clear();
     m_word_counts_by_z.clear();
+    calendar.clear();   
 
     free_vec_ptr(m_word_counts_by_zd);
     free_vec_ptr(m_word_counts_by_zw);

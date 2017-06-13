@@ -55,7 +55,8 @@ public:
     int total_words;
     int num_docs;
     vector<document*> docs;
-    unordered_map<int,vector<int>> calender;
+    unordered_map<int,vector<int>> calender;// new add
+    vector<int> year_stack;
 };
 
 #endif	/* _CORPUS_H */

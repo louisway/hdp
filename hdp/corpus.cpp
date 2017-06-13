@@ -11,7 +11,7 @@ corpus::corpus()
     size_vocab = 0;
     total_words = 0;
     num_docs = 0;
-    year = -1;
+    
 }
 
 corpus::~corpus()
@@ -26,8 +26,8 @@ corpus::~corpus()
     size_vocab = 0;
     num_docs = 0;
     total_words = 0;
-    year = -1;
     calender.clear();
+    year_stack.clear();
 }
 
 void corpus::read_data(const char * filename)

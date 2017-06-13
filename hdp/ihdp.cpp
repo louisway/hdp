@@ -26,6 +26,7 @@ ihdp::~ihdp()
     time_interval = -1;
 
     delete m_state; m_state = NULL;
+    time_stack.clear();
 }
 
 void ihdp::load(char * model_path) // currently useless
@@ -50,6 +51,7 @@ void ihdp::setup_state(const corpus * c,
 
     m_hdp_param = _hdp_param;
     time_interval = c->time_interval;
+    time_stack = c->time_stack;
     m_state = new hdp_state();
 
     m_state->setup_state_from_corpus(c);
@@ -78,11 +80,6 @@ void ihdp::run(const char * directory)
 
     double best_likelihood = m_state->joint_likelihood(m_hdp_param);
 
-    char name[500];
-    sprintf(name, "%s/state.log", directory);
-    FILE* file = fopen(name, "w");
-    fprintf(file, "time iter num.topics num.tables likelihood gamma alpha split merge trial\n");
-
     bool permute = false;
 
     /// time part ...
@@ -109,25 +106,9 @@ void ihdp::run(const char * directory)
                         m_state->m_num_topics, m_state->m_total_num_tables,
                         m_state->m_gamma, m_state->m_alpha, likelihood);
 
-        fprintf(file, "%8.2f %05d %04d %05d %.5f %.5f %.5f ",
-                dif, iter, m_state->m_num_topics, m_state->m_total_num_tables,
-                likelihood, m_state->m_gamma, m_state->m_alpha);
-
         if (best_likelihood < likelihood)
         {
             best_likelihood = likelihood;
-            sprintf(name, "%s/mode", directory);
-            m_state->save_state(name);
-            sprintf(name, "%s/mode.bin", directory);
-            m_state->save_state_ex(name);
-        }
-
-        if (m_hdp_param->m_save_lag != -1 && (iter % m_hdp_param->m_save_lag == 0))
-        {
-            sprintf(name, "%s/%05d", directory, iter);
-            m_state->save_state(name);
-            sprintf(name, "%s/%05d.bin", directory, iter);
-            m_state->save_state_ex(name);
         }
 
         int num_split=0, num_merge=0, num_trial = 0;
