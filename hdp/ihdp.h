@@ -20,6 +20,7 @@ public:
     ihdp();
     virtual ~ihdp();
 public:
+    void run();
     void run(const char * directory);
     void run_test(const char * directory);
 

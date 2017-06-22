@@ -128,6 +128,7 @@ public:
     void   init_gibbs_state_using_docs();
     void   init_gibbs_state_with_fixed_num_topics();
     void   HDP_Sampler(const int first_year, bool remove);// new added  HDP SAMPLER
+    void   Pre_Sampler(const int cur_year);// new added Predict Sampler
     void   iterate_gibbs_state(bool remove, bool permute,
                                hdp_hyperparameter* hdp_hyperparam,
                                bool table_sampling=false);

@@ -343,15 +343,230 @@ void hdp_state::init_gibbs_state_with_fixed_num_topics()
     delete [] q; delete [] v;
 
 }
+ 
+void hdp::state::Reju_Sampler(const int cur_year, const int T_win, const int MaxIter)
+{
+    doc_state* d_state = NULL;
+    double_vec q;
+    double_vec f;
 
-void hdp_state::HDP_Sampler(const int first_year, bool remove)
+    for(int iter = 0; iter < MaxIter; ++iter)
+   {
+      for( int y = T_win; y <= cur_year; ++y)
+      {
+           for(int n = 0; n <calendar[y].size(); ++n)
+           {
+                d_state = m_doc_states[calendar[y][n]];
+                //sample word
+                for(int i = 0; i < d_state_>m_doc_length; ++i)
+                {
+                     //remove
+                     doc_state_update(d_state, i, -1);
+                     if(q.size() < d_state->m_num_tables +1 );
+                       q.resize(2 * d_state->m_num_tables + 1, 0.0);
+                     if(f.size() < m_num_topics)
+                        f.resize(2 * m_num_topics + 1, 0.0);
+                    int k, t, w;
+                    w = d_state->m_words[i].m_word_index;
+                    double f_new = 0.0;
+                    for( k =0; k < m_num_topics; k++)
+                    {
+                         f[k] = (m_word_counts_by_zw[k][w] + m_eta)/(m_word_counts_by_z[k] + m_size_vocab * m_eta);
+                         f_new += m_num_tables_by_z[k]* f[k];
+                    }
+                    f_new = f_new/(m_total_num_tables + m_gamma);
+                    double total_q = 0.0, f_k = 0.0;
+                    for (t = 0; t < d_state->m_num_tables; ++t)
+                    {
+                          if(d_state->m_word_counts_by_t[t] > 0)
+                          {
+                                k = d_state->m_table_to_topic[t];
+                                f_k = f[k];
+                          }
+                          else
+                          {
+                              f_k = 0.0;
+                          }
+                          total_q += d_state->m_word_counts_by_t[t] * f_k;
+                          q[t] = total_q;
+                    } 
+                    total_q += m_alpha * f_new;
+                    q[d_state->m_num_tables] = total_q;
+                    double u =ruinform() * total_q;
+                    for (t = 0; t<d_state->m_num_tables+1; ++t)
+                    {
+                         if (u < q[t]) break;
+                    }
+                   d_state->m_words[i].m_table_assignment = t;
+                   if(t == d_state->m_num_tables)
+                   {
+                        if((int)q.size() < m_num_topics + 1)
+                            q.resize(2 * m_num_topics + 1, 0.0);
+                       total_q = 0.0;
+                       for ( k = 0; k < m_num_topics; k++)
+                            if(u < q[k]) break;
+                       doc_state_update(d_state , i , +1,k);
+                   } 
+                   else
+                   {
+                        doc_state_update(d_staet, i, +1);
+                   }
+               }
+               //sample_tables
+               vector<int*> words_by_t;
+               words_by_t.resize(d_state->m_num_table, NULL);
+               int *p = NULL;
+               int t, word;
+               for( t = 0; t < d_state->m_num_tables; ++t)
+               {
+                   if(d_state->m_word_counts_by_t[t] >0)
+                   {
+                     p = new int[d_state->m_word_counts_by_t[t];
+                     words_by_t[t] = p;
+                   }
+               }
+               int * i_by_t = new int[d_state->m_num_tables];
+               memset(i_by_t, 0, sizeof(int) * d_state->m_num_tables);
+               for( int i = 0; i < d_state->m_doc_length; ++i)
+               {
+                  word = d_state->m_words[i].m_word_index;
+                  t = d_state->m_word[i].m_table_assignment;
+                  words_by_t[t][i_by_t[t]] = i;
+                  i_by_t[t]++;
+               }
+               // till now, above is counts the words(index) of each table;
+              for( t =0; t < d_state->m_num_tables; ++t)
+              {
+                  if(d_state->m_word_counts_by_t[t] > 0)
+                  {
+                      //sample_table_assignment
+                      int t_i, t_w, t_k, t_m, t_k_old, t_d;
+                      int* counts = new int[m_size_vocab];
+                      int* counts_copy = new int[m_size_vocab];
+                      memset(counts_copy, 0, sizeof(int)*m_size_vocab);
+                      int count_sum = d_state->m_word_counts_by_t[t];
+   
+                      for(t_m = 0; t_m < d_state->m_word_counts_by_t[t]; ++t_m)
+                      {
+                          t_i = word_by_t[t][t_m];
+                          t_w = d_state->words[t_i].m_word_index;
+                          counts_copy[t_w]++;
+                      } 
+                      memcpy(counts, counts_copy, sizeof(int)*m_size_vocab);
+
+                     //double f_new = 0.0; 
+                     //no new topic lgamma(m_size_vocab*m_eta) - lgamma(count_sum + m_size_vocab*m_eta);
+                     /*for(m = 0; m < d_state->m_word_counts_by_t[t];++m)
+                     {
+                        f_new += lgama(counts[w] + m_eta) - lgamma(m_eta);
+                        counts[w] = 0;
+                     }*/
+               
+                     if ((int)q.size() < m_num_topics + 1)
+                         q.resize(2 * m_num_topics + 1, 0.0);
+                     if ((int)f.size() < m_num_topics)
+                         f.resize(2 * m_num_topics + 1, 0.0);
+
+                    // q[m_num_topics] = log(m_gamma) + f_new;
+           
+                    t_k_old = d_state-<m_table_to_topic[t];
+                    for(t_k = 0; t_k < m_num_topics; ++t_k)
+                    {
+                       if(t_k == t_k_old)
+                       {
+                          f[t_k] = lgamma(m_size_vocab*m_eta + m_word_counts_by_z[t_k] - count_sum) -
+                                 lgamma(m_size_vocab*m_eta + m_word_counts_by_z[t_k]);
+                          memcpy(counts, counts_copy, sizeof(int)*m_size_vocab);
+                          for(t_m = 0; t_m <d_state->m_word_counts_by_t[t]; ++t_m)
+                          {
+                               t_i = words_by_t[t][t_m];
+                               t_w =d_state->m_words[t_i].m_word_index;
+                               if(counts[t_w] > 0)
+                               {
+                                   f[t_k] += lgamma(m_eta + m_word_counts_by_zw[t_k][t_w]) -
+                                           lgamma(m_eta + m_word_counts_by_zw[t_k][t_w] - counts[t_w]);
+                                   counts[t_w] = 0;
+                               }
+                              
+                          }
+                          if (m_num_tables_by_z[t_k] == 1) q[t_k] = INF;
+                          else q[t_k] = log(m_num_tables_by_z[t_k] - 1) + f[t_k];
+                       }
+                       else
+                       {
+                          f[t_k] = lgamma(m_size_vocab * m_eta + m_word_counts_by_z[t_k]) -
+                              lgamma(m_size_vocab * m_eta + m_word_counts_by_z[t_k] + count_sum);
+                       memcpy(counts, counts_copy, sizeof(int)*m_size_vocab);
+                         for( t_m = 0; t_m <d_state->m_word_counts_by_t[t]; ++t_m)
+                         {
+                           t_i = words_by_t[t][t_m];
+                           t_w = d_state->m_words[t_i].m_word_index;
+                           if(counts[t_w] > 0)
+                          {
+                               f[t_k] += lgamma(m_eta + m_word_counts_by_zw[t_k][t_w] + counts[t_w]) -
+                                       lgamma(m_eta  + m_word_counts_by_zw[t_k][t_w]);
+                               counts[t_w] = 0;
+                          }
+                         }
+                         q[t_k] = log(m_num_tables_by_z[t_k]) + f[t_k];
+                        }
+                     }
+          
+                    //normalizing in log space for sampling
+                    log_normalize(q, m_num_topics);
+                    q[0] = exp(q[0]);
+                    double t_total_q  = q[0];
+                    for (t_k = 1; t_k < m_num_topics; ++t_k)
+                   {
+                      t_total_q += exp(q[t_k]);
+                      q[t_k] =t_total_q;
+                   }
+                   double t_u = runiform() * total_q;
+                   for (t_k = 0; t_k < m_num_topics; ++t_k)
+                     if (t_u < q[t_k]) break;
+                   if(t_k != t_k_old)
+                   {
+                    t_d = d_state->m_doc_id;
+                    d_state->m_table_to_topic[t] = t_k;
+                    m_num_tables_by_z[t_k_old] --;
+                    m_word_counts_by_z[t_k_old] -= count_sum;
+                    m_word_counts_by_zd[t_k_old][t_d] -= count_sum;
+                    m_num_tables_by_z[t_k] ++;
+                    m_word_counts_by_z[t_k] += count_sum;
+                    m_word_counts_by_zd[t_k][t_d] += count_sum;
+           
+                   for (t_m = 0; t_m < d_state->m_word_counts_by_t[t]; ++t_m)
+                   {
+                       t_i = word_by_t[t][t_m];
+                       t_w = d_state->m_words[t_i].m_word_index;
+                       m_word_counts_by_zw[t_k_old][t_w] --;
+                       m_word_counts_by_zw[t_k][t_w] ++;
+                   }
+                   }
+                   delete []counts;
+                   delete []counts_copy;
+                }// end sample of table assignment 
+            }//end of table
+         for(t = 0; t < d_state->m_num_tables; t++)
+         {
+            p = words_by_t[t];
+            delete []p;
+         }
+           delete [] i_by_t;
+      //end of d_state 
+     }
+  }
+ }//update status;
+}
+
+void hdp_state::HDP_Sampler(const int first_year, bool remove, bool init)
 {
     double_vec q;
     double_vec f;
     doc_state* d_state = NULL;
     for(int j = 0; j < calendar[first_year].size(); ++j)
     {
-        d_state = m_doc_states[j];
+        d_state = m_doc_states[calendar[first_year][j]];
         for (int i = 0; i < d_state->m_doc_length; i++)
        {
          sample_word_assignment(d_state, i ,remove, q,f);
@@ -359,11 +574,72 @@ void hdp_state::HDP_Sampler(const int first_year, bool remove)
        sample_tables(d_state, q,f);
     }
     compact_hdp_state();
-     if (hdp_hyperparam->m_sample_hyperparameter)
+    
+    // concentrate param will only be updated at the initial HDP sampler 
+    if (init)
     {
         sample_first_level_concentration(hdp_hyperparam);
         sample_second_level_concentration(hdp_hyperparam);
+        return;
     }
+   // update word_status_new
+   for(int j = 0; j < calendar[first_year].size(); ++j)
+   {
+        d_state = m_doc_states[calendar[first_year][j]];
+        int w;
+        d_state->words_status_new = new word_topic[d_state->m_doc_length]; 
+        for (int i = 0; i < d_state->m_doc_length; ++i)
+        { 
+            w = d_stae->m_words[i].m_word_index;
+            d_state->words_status_new[i].m_word_index = w;
+            d_state->words_status_new[i].m_topic_assignment = m_table_to_topic[d_state->m_words[i].m_table_assignment];
+        }
+   }
+   
+}
+
+void hdp_state::Pre_Sampler(const int cur_year)
+{
+    vector<double_vec> f_mat;
+    double_vec f;
+    doc_state* d_state = NULL;
+    //for every word has the same distribution, so we could calculate this distribution in prior.
+    int w_len = m_size_vocab;
+    if ((int)f.size() == 0)
+    {
+        f.resize(m_num_topics, 0.0);
+    }
+    for(int w = 0; w < w_len; ++w)
+    {
+        for(int k =0; k < m_num_topics; ++k)
+        {
+           f[k] = (m_word_counts_by_zw[k][w] + m_eta)/(m_word_counts_by_z[k] + m_size_vocab * m_eta);
+           f[k] = m_num_tables_by_z[k] * f[k];
+           if (k > 0)
+          {
+               f[k] = f[k] + f[k - 1];
+          } 
+        }    
+        f_mat.push_back(f);
+    }
+    
+    for(int j = 0; j < calendar[cur_year].size(); ++j)
+    { 
+        doc_state = m_doc_states[calendar[cur_year][j]];
+        doc_state->words_status_old = new word_topic[doc_state->m_doc_length];
+        for (int i = 0; i < d_state->m_doc_length; ++i)
+        {
+     
+           int  t, w;
+           w = d_state->m_words[i].m_word_index;
+           double u = runiform() * f_mat[w][m_num_topic - 1];
+           for( t = 0; t < m_num_topic; ++t)
+           {
+               if(u < f_mat[w][t]) break; 
+           }
+          d_state->words_status_old[i].m_word_index = w;
+          d_state->words_status_old[i].m_topic_assignment = t;
+   }
 }
 
 void hdp_state::iterate_gibbs_state(bool remove, bool permute,
